@@ -4,6 +4,13 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 
 PROCESSED_DATA_DIR = ROOT_DIR / "data" / "processed"
 MODELS_DIR = ROOT_DIR / "models"
+CHECKPOINT_DIR = MODELS_DIR / "checkpoints"
+IOT_RAW_DATA_DIR = ROOT_DIR / "data" / "raw" / "ciciot2023"
+
+CLOUD_GRAPH_PATH = PROCESSED_DATA_DIR / "cloud_flow_graph.pt"
+IOT_GRAPH_PATH = PROCESSED_DATA_DIR / "iot_knn_graph.pt"
+CLOUD_SCALER_PATH = PROCESSED_DATA_DIR / "cloud_train_scaler.joblib"
+IOT_SCALER_PATH = PROCESSED_DATA_DIR / "iot_train_scaler.joblib"
 
 RANDOM_STATE = 42
 
@@ -11,21 +18,17 @@ RANDOM_STATE = 42
 MAX_GRAPH_FLOWS = 150_000
 MAX_NEIGHBORS_PER_FLOW = 2
 
-# Contrat Cloud CIC-IDS2017 ↔ IoT CICIoT2023.
-ALIGNED_FEATURES = [
-    "feat_01_protocol",
-    "feat_02_packet_count",
-    "feat_03_total_bytes",
-    "feat_04_packet_len_mean",
-    "feat_05_packet_len_std",
-    "feat_06_packet_len_var",
-    "feat_07_packet_len_min",
-    "feat_08_packet_len_max",
-    "feat_09_flow_rate",
-    "feat_10_iat_mean",
-    "feat_11_syn_flag",
-    "feat_12_ack_flag",
-    "feat_13_fin_flag",
-    "feat_14_rst_flag",
-    "feat_15_psh_flag",
+# Contrat final Cloud CIC-IDS2017 ↔ IoT CICIoT2023.
+# L'ordre est partagé avec la pipeline IoT et ne doit pas être modifié.
+HARMONIZED_FEATURES = [
+    "packet_count",
+    "total_bytes",
+    "packet_len_mean",
+    "packet_len_std",
+    "packet_len_var",
+    "packet_len_min",
+    "packet_len_max",
+    "flow_rate",
 ]
+
+N_FEATURES = len(HARMONIZED_FEATURES)

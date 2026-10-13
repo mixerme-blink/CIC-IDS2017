@@ -1,27 +1,20 @@
 import json
 
-from config import PROCESSED_DATA_DIR, ALIGNED_FEATURES
+from config import HARMONIZED_FEATURES, PROCESSED_DATA_DIR
 
 
 CLOUD_MAPPING = {
-    "feat_01_protocol": "Protocol",
-    "feat_02_packet_count": "Total Fwd Packets + Total Backward Packets",
-    "feat_03_total_bytes": (
+    "packet_count": "Total Fwd Packets + Total Backward Packets",
+    "total_bytes": (
         "Total Length of Fwd Packets + "
         "Total Length of Bwd Packets"
     ),
-    "feat_04_packet_len_mean": "Average Packet Size",
-    "feat_05_packet_len_std": "Packet Length Std",
-    "feat_06_packet_len_var": "Packet Length Variance",
-    "feat_07_packet_len_min": "Min Packet Length",
-    "feat_08_packet_len_max": "Max Packet Length",
-    "feat_09_flow_rate": "Flow Packets/s",
-    "feat_10_iat_mean": "Flow IAT Mean",
-    "feat_11_syn_flag": "SYN Flag Count",
-    "feat_12_ack_flag": "ACK Flag Count",
-    "feat_13_fin_flag": "FIN Flag Count",
-    "feat_14_rst_flag": "RST Flag Count",
-    "feat_15_psh_flag": "PSH Flag Count",
+    "packet_len_mean": "Average Packet Size",
+    "packet_len_std": "Packet Length Std",
+    "packet_len_var": "Packet Length Variance",
+    "packet_len_min": "Min Packet Length",
+    "packet_len_max": "Max Packet Length",
+    "flow_rate": "Flow Packets/s",
 }
 
 
@@ -30,10 +23,10 @@ def main():
 
     content = {
         "dataset": "CIC-IDS2017",
-        "feature_order": ALIGNED_FEATURES,
+        "feature_order": HARMONIZED_FEATURES,
         "cloud_mapping": CLOUD_MAPPING,
         "normalization": (
-            "Z-score ; scaler ajusté uniquement sur les flows du train set."
+            "Min-Max ; scaler ajusté uniquement sur les flows du train set."
         ),
         "label_binary": {
             "0": "BENIGN",
@@ -41,7 +34,7 @@ def main():
         },
         "graph_definition": {
             "node": "Un flow réseau",
-            "node_features": "Les 15 features harmonisées",
+            "node_features": "Les 8 features harmonisées",
             "node_label": "label_binary",
             "edges": (
                 "Flows successifs partageant une même IP "
