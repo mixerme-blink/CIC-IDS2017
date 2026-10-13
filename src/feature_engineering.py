@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DATA_DIR, ALIGNED_FEATURES
+from config import HARMONIZED_FEATURES, PROCESSED_DATA_DIR
 
 
 def numeric_column(df, column_name):
@@ -22,80 +22,47 @@ def main():
 
     df = pd.read_parquet(input_path).copy()
 
-    # Les 15 features harmonisées avec CICIoT2023.
+    # Les 8 features finales harmonisées avec CICIoT2023.
     aligned_df = pd.DataFrame(index=df.index)
 
-    aligned_df["feat_01_protocol"] = numeric_column(df, "Protocol")
-
-    aligned_df["feat_02_packet_count"] = (
+    aligned_df["packet_count"] = (
         numeric_column(df, "Total Fwd Packets")
         + numeric_column(df, "Total Backward Packets")
     )
 
-    aligned_df["feat_03_total_bytes"] = (
+    aligned_df["total_bytes"] = (
         numeric_column(df, "Total Length of Fwd Packets")
         + numeric_column(df, "Total Length of Bwd Packets")
     )
 
-    aligned_df["feat_04_packet_len_mean"] = numeric_column(
+    aligned_df["packet_len_mean"] = numeric_column(
         df,
         "Average Packet Size",
     )
 
-    aligned_df["feat_05_packet_len_std"] = numeric_column(
+    aligned_df["packet_len_std"] = numeric_column(
         df,
         "Packet Length Std",
     )
 
-    aligned_df["feat_06_packet_len_var"] = numeric_column(
+    aligned_df["packet_len_var"] = numeric_column(
         df,
         "Packet Length Variance",
     )
 
-    aligned_df["feat_07_packet_len_min"] = numeric_column(
+    aligned_df["packet_len_min"] = numeric_column(
         df,
         "Min Packet Length",
     )
 
-    aligned_df["feat_08_packet_len_max"] = numeric_column(
+    aligned_df["packet_len_max"] = numeric_column(
         df,
         "Max Packet Length",
     )
 
-    # Important : Rate IoT correspond à Flow Packets/s, pas Flow Bytes/s.
-    aligned_df["feat_09_flow_rate"] = numeric_column(
+    aligned_df["flow_rate"] = numeric_column(
         df,
         "Flow Packets/s",
-    )
-
-    aligned_df["feat_10_iat_mean"] = numeric_column(
-        df,
-        "Flow IAT Mean",
-    )
-
-    aligned_df["feat_11_syn_flag"] = numeric_column(
-        df,
-        "SYN Flag Count",
-    )
-
-    aligned_df["feat_12_ack_flag"] = numeric_column(
-        df,
-        "ACK Flag Count",
-    )
-
-    aligned_df["feat_13_fin_flag"] = numeric_column(
-        df,
-        "FIN Flag Count",
-    )
-
-    aligned_df["feat_14_rst_flag"] = numeric_column(
-        df,
-        "RST Flag Count",
-    )
-
-    aligned_df["feat_15_psh_flag"] = numeric_column(
-        df,
-        "PSH Flag Count",
     )
 
     # Colonnes nécessaires pour construire le graphe de flows.
@@ -109,7 +76,10 @@ def main():
 
     result_df = df[metadata_columns].copy()
 
-    for feature in ALIGNED_FEATURES:
+    if list(aligned_df.columns) != HARMONIZED_FEATURES:
+        raise AssertionError("L'ordre des features harmonisées est invalide.")
+
+    for feature in HARMONIZED_FEATURES:
         result_df[feature] = aligned_df[feature]
 
     result_df = result_df.replace([np.inf, -np.inf], 0).fillna(0)
@@ -120,7 +90,7 @@ def main():
     print(f"Nombre de flows : {len(result_df):,}")
     print("\nFeatures finales :")
 
-    for index, feature in enumerate(ALIGNED_FEATURES, start=1):
+    for index, feature in enumerate(HARMONIZED_FEATURES, start=1):
         print(f"{index}. {feature}")
 
 

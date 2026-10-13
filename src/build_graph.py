@@ -4,12 +4,13 @@ import joblib
 import torch
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from torch_geometric.data import Data
 
 from config import (
     PROCESSED_DATA_DIR,
-    ALIGNED_FEATURES,
+    HARMONIZED_FEATURES,
+    N_FEATURES,
     MAX_GRAPH_FLOWS,
     MAX_NEIGHBORS_PER_FLOW,
     RANDOM_STATE,
@@ -143,7 +144,7 @@ def main():
         "Destination IP",
         "Timestamp",
         "target",
-    ] + ALIGNED_FEATURES
+    ] + HARMONIZED_FEATURES
 
     missing_columns = [
         column for column in required_columns
@@ -163,15 +164,24 @@ def main():
 
     train_mask, validation_mask, test_mask = create_masks(y_np)
 
-    # Z-score sans data leakage : fit uniquement sur le train set.
-    raw_x = df[ALIGNED_FEATURES].to_numpy(dtype=np.float32)
+    if list(df[HARMONIZED_FEATURES].columns) != HARMONIZED_FEATURES:
+        raise AssertionError("L'ordre des features harmonisées est invalide.")
 
-    scaler = StandardScaler()
+    raw_x = df[HARMONIZED_FEATURES].to_numpy(dtype=np.float32)
+
+    if not np.isfinite(raw_x).all():
+        raise ValueError("Les features du graphe doivent être numériques et finies.")
+
+    # Min-Max sans data leakage : fit uniquement sur le train set.
+    scaler = MinMaxScaler()
     scaler.fit(raw_x[train_mask.numpy()])
 
     scaled_x = scaler.transform(raw_x)
 
     x = torch.tensor(scaled_x, dtype=torch.float32)
+
+    if x.shape[1] != N_FEATURES:
+        raise AssertionError("Le graphe doit contenir exactement 8 features par nœud.")
     y = torch.tensor(y_np, dtype=torch.long)
 
     edge_index = connect_consecutive_flows(df)
@@ -186,7 +196,7 @@ def main():
     cloud_graph.train_mask = train_mask
     cloud_graph.val_mask = validation_mask
     cloud_graph.test_mask = test_mask
-    cloud_graph.feature_names = ALIGNED_FEATURES
+    cloud_graph.feature_names = list(HARMONIZED_FEATURES)
     cloud_graph.graph_type = "flow_nodes_shared_ip_temporal_neighbors"
 
     torch.save(cloud_graph, graph_path)
@@ -216,4 +226,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

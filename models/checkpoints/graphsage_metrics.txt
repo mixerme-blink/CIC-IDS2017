@@ -1,0 +1,6 @@
+Model: graphsage
+Accuracy: 0.521467
+Precision: 0.511097
+Recall: 0.988733
+F1-score: 0.673861
+ROC-AUC: 0.516295

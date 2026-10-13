@@ -1,0 +1,6 @@
+Model: gcn
+Accuracy: 0.666400
+Precision: 0.664731
+Recall: 0.671467
+F1-score: 0.668082
+ROC-AUC: 0.619683

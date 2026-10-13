@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from config import (
     PROCESSED_DATA_DIR,
     MODELS_DIR,
-    ALIGNED_FEATURES,
+    HARMONIZED_FEATURES,
     RANDOM_STATE,
 )
 
@@ -22,7 +22,7 @@ def main():
     df = pd.read_parquet(input_path)
 
     missing_features = [
-        feature for feature in ALIGNED_FEATURES
+        feature for feature in HARMONIZED_FEATURES
         if feature not in df.columns
     ]
 
@@ -31,14 +31,14 @@ def main():
             f"Features harmonisées absentes : {missing_features}"
         )
 
-    # Random Forest : validation de l'utilité des features du contrat.
-    # Il ne change PAS l'ordre ni le nombre des 15 features partagées.
+    # Random Forest : validation de l'utilité des features finales.
+    # Il ne change ni leur ordre ni leur nombre.
     training_df = df.sample(
         n=min(100_000, len(df)),
         random_state=RANDOM_STATE,
     )
 
-    X = training_df[ALIGNED_FEATURES]
+    X = training_df[HARMONIZED_FEATURES]
     y = training_df["target"]
 
     model = RandomForestClassifier(
@@ -48,27 +48,31 @@ def main():
         class_weight="balanced",
     )
 
-    print("Entraînement Random Forest sur les 15 features harmonisées...")
+    print("Entraînement Random Forest sur les 8 features harmonisées...")
     model.fit(X, y)
 
     importance_df = pd.DataFrame({
-        "feature": ALIGNED_FEATURES,
+        "feature": HARMONIZED_FEATURES,
         "importance": model.feature_importances_,
     }).sort_values("importance", ascending=False)
 
     importance_df.to_csv(importance_path, index=False)
     joblib.dump(model, model_path)
 
-    # Sortie finale : métadonnées + exactement 15 features du contrat.
+    # Sortie finale : métadonnées + exactement 8 features du contrat.
     output_columns = [
         "Source IP",
         "Destination IP",
         "Timestamp",
         "Label",
         "target",
-    ] + ALIGNED_FEATURES
+    ] + HARMONIZED_FEATURES
 
     df[output_columns].to_parquet(output_path, index=False)
+    df[output_columns].to_csv(
+        PROCESSED_DATA_DIR / "cloud_features.csv",
+        index=False,
+    )
 
     print("\nImportance des features harmonisées :")
     print(importance_df.to_string(index=False))
